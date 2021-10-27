@@ -112,3 +112,85 @@
 
   - 实现“SELECT * FROM 表名”。
   - 显示表的结构和内容。
+
+# 第四部分：查询处理功能实践
+
+## 实验目的
+
+1、熟悉SQL语句中的查询语句的格式和功能。
+
+2、掌握查询处理算法，包括选择、投影、连接算法。
+
+要求：能够处理多个表的连接操作；查询条件至少包括and、=、<、>等符号。
+
+## 实验内容
+
+**注：以下所有功能的实现，要进行语法和语义检查。**
+
+查询执行：
+
+- 实现单关系的**投影操作**（SELECT 属性名列表 FROM 关系名）。
+
+  ~~~SQL
+  select emloyee.id,project.id
+  from works_on;
+  ~~~
+
+  ~~~sql
+  (?i)select\s+(?P<attr>)\s+from\s+(?P<name>\w+)\s*;?
+  # 属性
+  \w+\.\w+(?:\s*,\s*\w+\.\w+)*
+  # result
+  (?i)select\s+(?P<attr>\w+\.\w+(?:\s*,\s*\w+\.\w+)*)e\s+from\s+(?P<name>\w+)\s*;?
+  ~~~
+
+- 实现单关系的**选择操作**（SELECT * FROM 关系名 WHERE 条件表达式）。
+
+  ~~~sql
+  SELECT *
+  FROM works_on
+  WHERE works_on.project_id = 'p2' 
+  and works_on.hours=3;
+  ~~~
+
+  ~~~sql
+  # 条件
+  \w+\.\w+\s*=\s*(?:\d+|'\w+')(?:\s+and\s+\w+\.\w+\s*=\s*(?:\d+|'\w+'))*
+  # result
+  (?i)select\s+\*\s+from\s+(?P<name>\w+)(?:\s+where\s+(?P<con>\w+\.\w+\s*=\s*(?:\d+|'\w+')(?:\s+and\s+\w+\.\w+\s*=\s*(?:\d+|'\w+'))*))?\s*;?
+  ~~~
+
+- 实现单关系的**选择和投影**操作（SELECT 属性名列表 FROM 关系名 WHERE 选择条件）。//选择条件是指“属性名 操作符 常量”形式的条件
+
+  ~~~sql
+  select emloyee.id
+  FROM wemployee
+  WHERE works_on.project_id = 'p2' 
+  ~~~
+
+  ~~~sql
+  # result 
+  (?i)select\s+(?P<attr>\w+\.\w+(?:\s*,\s*\w+\.\w+)*|\*)\s+from\s+(?P<name>\w+)(?:\s+where\s+(?P<con>\w+\.\w+\s*=\s*(?:\d+|'\w+')(?:\s+and\s+\w+\.\w+\s*=\s*(?:\d+|'\w+'))*))?\s*;?
+  ~~~
+
+- 实现两个关系和**多个关系**的连接操作（SELECT * FROM 关系名列表 WHERE 连接条件）。//选择条件是指“属性名 操作符 属性名”形式的条件
+
+- 实现两个关系和**多个关系**的**选择和连接**操作（SELECT * FROM 关系名列表 WHERE 选择条件和连接条件）。
+
+- 实现两个关系和多个关系的**投影和连接**操作（SELECT 属性名列表 FROM 关系名列表 WHERE 连接条件）。
+
+- 实现多个关系的选择、投影和连接操作（SELECT 属性名列表 FROM 关系名列表 WHERE 条件表达式）。
+
+  ~~~sql
+  select emloyee.name, emloyee.i
+  FROM works_on,employee
+  WHERE works_on.project_id = 'p2' 
+  AND works_on.employee_id = employee.id;
+  ~~~
+
+  ~~~sql
+  # 多关系
+  \w+(?:\s*,\s*\w+)
+  # result
+  (?i)select\s+(?P<attr>\w+\.\w+(?:\s*,\s*\w+\.\w+)*|\*)\s+from\s+(?P<name>\w+(?:\s*,\s*\w+)*)(?:\s+where\s+(?P<con>\w+\.\w+\s*=\s*(?:\d+|'\w+'|\w+\.\w+)(?:\s+and\s+\w+\.\w+\s*=\s*(?:\d+|'\w+'|\w+\.\w+))*))?\s*;?
+  ~~~
